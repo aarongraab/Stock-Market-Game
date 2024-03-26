@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .register-container {
+            width: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .success-message {
+            color: green;
+            margin-bottom: 15px;
+            display: none; 
+        }
+    </style>
+
+</head>
+<body>
+    <div class="register-container">
+        <h2>Register</h2>
+        <form id="registerForm" action="/register" method="post">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required>
+            </div>
+            <div id="errorMessage" class="error-message"></div>
+            <div class="form-group">
+                <button type="button" id="registerButton">Register</button>
+            </div>
+            <div id="successMessage" class="success-message"></div>
+            <div class="form-group">
+                <button type="button" id="backToLoginButton">Back to Login</button>
+            </div>            
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('backToLoginButton').addEventListener('click', function() {
+            window.location.href = '/login'; 
+        });
+        document.getElementById('registerButton').addEventListener('click', async function(event) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'none';
+            successMessage.textContent = '';
+            
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
+            var confirmPassword = document.getElementById('confirmPassword').value;
+            var errorMessage = document.getElementById('errorMessage');
+    
+            errorMessage.style.display = 'none'; // Hide error message by default
+    
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Passwords do not match.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+    
+            if (password.length < 5) {
+                errorMessage.textContent = 'Password is too short.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+    
+            // Fetch call to check username availability
+            try {
+                const response = await fetch('/check-username', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                });
+                const { available } = await response.json();
+                if (!available) {
+                    errorMessage.textContent = 'Username already exists.';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+    
+                // Username is available, proceed with the registration
+                // We manually send a POST request to the registration endpoint
+                /*
+                const matchResponse = await fetch('/checkMatch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                const { match } = await matchResponse.json();
+                if (!match) {
+                    errorMessage.textContent = 'Incorrect Username or Password';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                */
+
+                const register = await fetch('/insert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const isSuccessful = await register.json();
+
+                if (!isSuccessful.success) {
+                    errorMessage.textContent = isSuccessful.message;
+                    errorMessage.style.display = 'block';
+                    successMessage.style.display = 'none'; // Hide success message in case of error
+                } else {
+                    successMessage.textContent = isSuccessful.message;
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none'; // Hide error message in case of success
+
+                    // Clear the input fields after successful registration
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                }
+
+            } catch (error) {
+                console.error('Error during registration:', error);
+                errorMessage.textContent = 'An error occurred during registration.';
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none'; // Hide success message in case of error
+            }
+        });
+    </script>
+</body>
+</html>
+

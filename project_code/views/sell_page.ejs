@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Stocks</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #ecf0f1;
+            margin: 0;
+            padding: 20px;
+            color: #333; /* Dark grey text for general readability */
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            color: #2c3e50; /* Dark blue for headings */
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .error-message {
+            color: #e74c3c; /* Red for errors */
+            background-color: #fce4e4; /* Light red background */
+            border: 1px solid #e74c3c;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: none; /* Hidden by default */
+        }
+        .stocks-display, .total-sale, .form-group {
+            margin-bottom: 20px;
+        }
+        ul#stocksList li {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            /* Rest of the styles */
+        }
+        .form-group label {
+            color: #7f8c8d; /* Light grey for form labels */
+            /* Rest of the styles */
+        }
+        .form-group input, .form-group select {
+            border: 1px solid #bdc3c7; /* Light grey border for inputs */
+            /* Rest of the styles */
+        }
+        .form-group button {
+            background-color: #3498db; /* Blue for buttons */
+            /* Rest of the styles */
+        }
+        .form-group button:hover {
+            background-color: #2980b9; /* Darker blue on hover */
+        }
+        .total-sale {
+            background-color: #f7f7f7; /* Light background for total sale display */
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            /* Rest of the styles */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sell Stocks</h1>
+
+        <div id="errorMessage" class="error-message">Error message goes here.</div>
+
+        <!-- Display Stocks Available for Sale -->
+        <div class="stocks-display">
+            <h2>Stocks Available:</h2>
+            <ul id="stocksList">
+                <!-- Dynamic list of stocks the user owns will be inserted here -->
+            </ul>
+        </div>
+
+        <!-- Dropdown for Selecting Stock to Sell -->
+        <div class="form-group">
+            <label for="stockToSell">Select Stock:</label>
+            <select id="stockToSell" name="stockToSell">
+                <!-- Options populated based on stocks owned by the user -->
+            </select>
+        </div>
+
+        <!-- Input Field for Quantity to Sell -->
+        <div class="form-group">
+            <label for="quantityToSell">Quantity to Sell:</label>
+            <input type="number" id="quantityToSell" name="quantityToSell" min="1" required>
+        </div>
+
+        <!-- Display Calculated Total -->
+        <div class="total-sale">Total Sale: <span id="totalSale">$0.00</span></div>
+
+        <!-- Button for Calculating Stock Sale Price -->
+        <div class="form-group">
+            <button type="button" id="calculateSale">Calculate Sale</button>
+        </div>
+
+        <!-- Button for Selling Stocks -->
+        <div class="form-group">
+            <button type="button" id="sellStocksButton">Sell Stonks</button>
+        </div>
+    </div>
+
+    <script src="/path/to/your/sellPageScript.js"></script> <!-- Adjust the path as needed -->
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .login-container {
+            width: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            display: none; /* Hidden by default */
+        }
+        .register-link {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="login-title">Stock Game</div>
+    <div class="login-container">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+        </div>
+        <div class="form-group">
+            <button type="button" id="loginButton">Log In</button>
+        </div>
+        <div class="error-message" id="errorMessage">Incorrect username or password.</div>
+        <a href="/register" class="register-link">Don't have an account? Register here</a>
+    </div>
+
+    <script>
+        document.getElementById('loginButton').addEventListener('click', async function() {
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
+            var errorMessage = document.getElementById('errorMessage');
+
+            errorMessage.style.display = 'none';
+
+            if (username.length === 0 || password.length === 0) {
+                errorMessage.textContent = 'Please enter a username and password.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success && username == 'admin') {
+                // Client-side redirection to admin page
+                window.location.href = '/admin';
+                } else if (data.success) {
+                // Client-side redirection to the dynamic profile URL
+                window.location.href = `/profile/${data.username}`;
+                } else {
+                errorMessage.textContent = data.error || 'Login failed, please try again.';
+                errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                errorMessage.textContent = 'An error occurred during login.';
+                errorMessage.style.display = 'block';
+            }
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .navigation {
+            width: 100%;
+            display: flex;
+            justify-content: space-evenly;
+            margin-bottom: 20px;
+        }
+        .navigation button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .content, .stock-info {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .list, .details, .activity {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .list, .activity {
+            width: 30%;
+        }
+        .details {
+            width: 35%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .details h3, .stock-info h3 {
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .stock-table {
+            border: 1px solid #ccc;
+            table-layout: fixed;
+        }
+        .stock-table td {
+            height: 100px; /* Adjust height as necessary */
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+
+
+</head>
+<body>
+    <div class="navigation">
+        <button id="buySell">Buy/Sell</button>
+        <button id="profile">Profile</button>
+        <button id="friends">Friends</button>
+        <button id="logOut">Log Out</button>
+    </div>
+    <div class="username">
+        <h2 id="playerUsername">Username: <%= username %></h2>
+    </div>
+    <div class="content">
+        <div class="list">
+            <h3>Leaderboard</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Username</th>
+                        <th>Profits</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Usernames and profits will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="details">
+            <h3>Account Details</h3>
+            <p id="cashValue">Overall Cash Value: </p>
+            <p id="profits">Profits: </p>
+            <p id="losses">Losses: </p>
+        </div>
+        <div class="activity">
+            <h3>Recent Activity</h3>
+        </div>
+    </div>
+    <div class="stock-info">
+        <table class="stock-table">
+            <tbody>
+                <tr>
+                    <!-- Example cells -->
+                    <td>Stock 1</td>
+                    <td>Stock 2</td>
+                    <td>Stock 3</td>
+                    <td>Stock 4</td>
+                </tr>
+                <tr>
+                    <td>Stock 5</td>
+                    <td>Stock 6</td>
+                    <td>Stock 7</td>
+                    <td>Stock 8</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('buySell').addEventListener('click', function() {
+            const username = '<%= username %>'; // EJS syntax to embed JS variable
+            window.location.href = `/buy/${encodeURIComponent(username)}`;
+        });
+
+        // Log Out button event listener
+        document.getElementById('logOut').addEventListener('click', function() {
+            // Redirect to the logout page
+            window.location.href = '/logout';
+        });
+    </script>
+    
+    
+</body>
+</html>

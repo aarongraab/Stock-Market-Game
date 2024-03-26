@@ -1,0 +1,158 @@
+README FILE: Project - Part 2
+
+Importing modules:
+- I have created a package.json file which holds a list of the imports I've done. I have also listed them below.
+- The polygon can only be successful if the polygon client-js folder is also located in the same directory it is being run in the terminal.
+
+NPM IMPORTS:
+1. npm install express-session
+2. npm install node-fetch
+3. npm install --save @polygon.io/client-js
+4. npm install date-fns
+5. npm install supertest --save-dev
+6. npm install --save-dev jest
+7. There may be more that I forgot to document at the beginning of the project...
+
+Layout of files:
+- All of my files for this project are found in my project_code folder.
+- My server is run from my app.mjs file.
+- My database methods are found in my database.mjs file.
+- My api methods are found in my api.mjs file.
+- My routes are found in my app.mjs file (I will moduralize them later).
+- All of my HTML files are found in the /views folder.
+- The API files are found in the client-js-master folder. This should be in the same directory as your terminal when you run the save command.
+- Thinking.mjs are just my thoughts and quick notes, don't need to mark that.
+- Tests.mjs which can be run to test my code/ program.
+
+Running the server:
+- Ensure you are in the proper directory - specifically the project_code one.
+- Ensure all the proper files and modules are installed correctly.
+- The server can be run in the terminal with the command "node app.mjs".
+- This should launch the http://localhost:8820 website.
+- This should bring you to the login page. 
+- Please go to the Login Page header for more information.
+
+The database:
+- All database methods are found in my database.mjs
+- I used MongoDB for my database.
+- I mainly used MongoDB Compass in order to visualize the data being inserted into the database.
+- I have 5 collections within my 'stockGame' database.
+- 'Users' which is strictly for documenting usernames and passwords.
+- 'Games' which is strictly for documenting newly created games. Includes a unique gameId, the gameName, startingCash, and the endDate.
+- 'GamePlayers' which strictly is for documenting which players are a part of which games. Per entry, includes the unique gameId and username. 1 game may have 5 players, which means 5 separate entries each all with the same gameId (since they are all apart of the same game)
+- 'PlayerVariables' which strictly is used to document information about each username, cash amount, profits, and an array of transactions (which initializes to empty).
+- For the 'PlayerVariables' collection I still have yet to add code to prevent a username from participating in two games at once. Maybe a feature I can add down the road.
+
+My API: 
+***MY API CAN ONLY HANDLE 5 API REQUESTS PER MINUTE***
+***ANY ERRORS MAY BE DUE TO NOT ENOUGH API REQUESTS*** (Please wait a minute and try again)
+***SOMETIMES THE API WONT LET YOU MAKE CALLS AT CERTAIN TIMES***(These errors will be displayed in the console to see if its issues with my code or the API call)
+***MY API ONLY RETURNS END OF DAY STOCK PRICES*** (For real time stock prices, I needed to pay)
+- All api functions are found in my api.mjs file.
+- How my API call works is that I only get stock prices from the day prior to the request being made.
+- This causes issues if trades are attempted on Monday... but you can trade on Saturdays! (Again would be fixed if I got real-time stock prices from paid version)
+- Whenever the 'Check Price' button on the 'buy_page.ejs' is pressed, I do 1 API call which returns the closing stock price of the previous day.
+- Whenever the 'Buy Stonks' button on the 'buy_page.ejs' is pressed, another API request is used to calculate the stock purchase made. 
+- API requests are made with a special key, linking my account.
+- The 'getStockPrice' method takes a string ticker variable and a date variable to do the specific API call. (Date must be in format "YYYY-MM-DD").
+
+Login Page:
+- The login page HTML file is login_page.ejs.
+- The login page routes can be found in app.mjs.
+- Page consists of a 'username' field, a 'password' field, a 'Log In' button, and a hyperlink to the register page.
+1. New username, password doesn't matter = Red error text below 'Log In' button saying "Username doesn't exist. Please register an account". Message printed to console.
+2. Existing username, incorrect password = Red error text below 'Log In' button saying "Invalid credentials". Message printed to console.
+3. Username and password correct = "Login successful" message to console. User is redirected to the profile_page.ejs.
+- Usernames and passwords checks are called using the routes method in app.mjs which calls the specific database method.
+- Dynamic URLs are used, the username will appear in the URL for easier access later on. 
+- Entering 'admin' as the username and password will redirect you to the admin page.
+
+Register Page:
+- The registration page HTML file is register_page.ejs.
+- The register page routes can be found in app.mjs.
+- Page consists of a 'username' field, a 'password' field, a 'confirm password' field, a 'Register' button, and a 'Back to Login' button.
+1. New username, password legth < 5 characters = Red error text above 'Register' button saying "Password is too short".
+2. New username, password and confirm password dont match = Red error text above 'Register' button saying "Passwords do not match".
+3. Existing username entered, password and confirm password match and are longer than 5 characters = Red error text above 'Register' button saying "Username already exists". Message printed to console.
+4. New username, password length > 5, password and confirm password match = Green text below 'Register' button saying "Registration successful". All fields are erased. Message printed to console showing username and password.
+- If registration successful, username and password saved in database under collection 'Users'.
+- 'Back to Login' button returns the user back to the login page once they've finished registering their new account.
+
+Admin Page:
+- Entering 'admin' as the username and password will redirect you to the admin page.
+- The admin page HTML file is admin_page.ejs.
+- Page consists of a 'Select Players' scroll box. Includes all usernames that the admin can manually double click to add to the 'Selected Players' array.
+- No way yet to remove a player once its been added to the 'Selected Players' array. Easiest way is to just refresh the page and start again.
+- Consists of 'Game Name' field, 'Starting Cash Value' field, a 'End of Date' field, and a 'Create Game' button.
+- When 'Create Game' button is pressed, all data is entered into the database 'stockGame' in the collections 'Games', 'GamePlayers', and 'PlayerVariables' as described in the database section of this readme file.
+- 'Back to Login' button which returns the user to the login page.
+- Admin login does not use dynamic routing to put username in URL.
+
+Profile Page:
+- The profile page HTML file is profile_page.ejs.
+- This is just a quick mock of what I am hoping the profile page will be.
+- Will use dynamic routing to display username in URL to pull specific data using that information. As seen in the username title at the top of the profile page.
+- 'Buy/Sell' button will take the user to the buy page.
+- The 'Log Out' button will return the user to the login page.
+
+Buy Page:
+- The buy page HTML file is buy_page.ejs.
+- A 'Cash Available' text box that will display the players available cash based on the dynamic routing of the username.
+- A 'Stock Ticker' field where players can search for a stock on the NYSE from the drop down menu of the top 500 most popular tickers. If stock isn't popular and widely known, they can still enter the ticker and the API call will still work.
+- A 'Quantity' field which a player can enter the specific amount of stocks they wish to purchase.
+- Whenever the 'Check Price' button is pressed, I do 1 API call which returns the closing stock price of the previous day. This price is then multiplied by the entered 'Quantity' value to print a total cost value.
+- New check price value updates the 'Total Cost' field.
+- Whenever the 'Buy Stonks' button is pressed, another API request is sent which takes the stock price and multiplies it by the 'Quantity' value and buys that much stock. Profile and transactions are then updated. 
+- The 'Sell Stonks' page takes the user to the sell page.
+
+Sell Page:
+- The sell page HTML file is sell_page.ejs.
+- The 'Select Stock' drop down will list all the stocks that player owns and can select the one they desire to sell. List will also include quantity of stocks.
+- The 'Quantity to Sell' field is so the user can dictate how many stocks they will to sell.
+- The 'Calculate Sale' button will preform another API call, similar to that of 'Check Price', to calculate how much profit the player will make. Profit will be updated in the 'Total Sale' amount.
+- The 'Sell Stonk' button will proceed with the physical selling of the stock and update the players profile with all the necessary updates from sell the specific stock and quantity. This will include an API call to get the stock price.
+
+Logout Page:
+- The logout page HTML file is logout_page.ejs.
+- This is accessed by the 'Logout' button found on the profile page.
+- The logout page displays a 'Log Out Successful' message.
+- Provides a 'Back to Login' button which returns the user back to the login page.
+
+Features to add/ fix for future:
+- Look into more reliable API calls.
+- Fix update db when stocks are bought.
+- Fix update db when stocks are sold.
+- Fix drop down menu on sell page of stock lists for player.
+- Set up API calls for checking and selling stocks on sell page.
+- Set up timer that checks daily when game is done.
+- Set up ranking system for comparing profits against players in a game.
+- Make the sell page better.
+- Update unit test code to include better initialization of db and cleaning of db.
+- Update unit test code so it works properly.
+- Update profile page so it displays more information.
+- Set up profile and friends button on profile page that redirect to new websites where you can view friend's profiles.
+- Separate server and routes code into modularized files.
+- Set up better architecture for code files.
+
+**Manually Testing**
+- Im sorry, I'm trying to write a test code but if it doesn't work, please attempt to test manually.
+
+Test #1: Registration Page
+1. Username: Bobby, Password: 123, Confirm Password: 123 - "Password is too short" error
+2. Username: Bobby, Password: 12345, Confirm Password: 11111 - "Passwords do not match" error
+3. Username: Bobby, Password: 12345, Confirm Password: 12345 - "Registration Successful" successful
+4. Username: Bobby, Password: 11111, Confirm Password: 11111 - "Username already exists" error
+5. Username: admin, password: admin, Confirm Password: admin - "Registration Successful" successful
+6. Username: Julia, Password: hello, Confirm Password: hello - "Registration Successful" successful
+
+Test #2: Login Page
+1. Username: Bobby, Password: 00000 - "Invalid credentials" error
+2. Username: Andrew, Password: hello - "Username doesn't exist. Please register an account" error
+3. Username: Bobby, Password: 12345 - Login successful redirected to profile page.
+4. Username: admin, Password: admin - Login successful redirected to admin page.
+
+Test #3: Admin Page
+1. Select Players: Bobby and Julia. Game Name: Test, Starting Cash Value: 1000, End Date: 2024-03-21 - Game Created Successfully (Database will reflect these additions)
+
+Test #4: API Calls - Buy Page
+1. Stock Ticker: AAPL, Quantity: 10 - Successful Total Cost Updated

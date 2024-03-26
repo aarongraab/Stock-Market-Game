@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Page</title>
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        min-height: 100vh;
+        position: relative; 
+        font-size: 18px; 
+    }
+    .admin-title {
+        font-size: 36px; 
+        margin-top: 0;
+    }
+    .form-group {
+        margin: 15px 0; 
+    }
+    label {
+        display: block;
+        margin-bottom: 7.5px; 
+        font-size: 18px; 
+    }
+    input[type="text"], input[type="number"], input[type="date"] {
+        width: 450px; /* Increased width */
+        padding: 12px; /* Increased padding */
+        margin-bottom: 15px; /* Increased margin */
+        font-size: 18px; /* Increased font size */
+    }
+    input[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px 30px; /* Increased padding */
+        border: none;
+        cursor: pointer;
+        font-size: 18px; /* Increased font size */
+    }
+    input[type="submit"]:hover {
+        background-color: #45a049;
+    }
+    .back-to-login-btn {
+        position: absolute;
+        top: 30px; /* Increased positioning */
+        right: 30px; /* Increased positioning */
+        padding: 15px 30px; /* Increased padding */
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 18px; /* Increased font size */
+    }
+    .back-to-login-btn:hover {
+        background-color: #45a049;
+    }
+    .selected-players {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+</style>
+</head>
+<body>
+
+<button onclick="window.location.href='/login';" class="back-to-login-btn">Back to Login</button>
+
+<h2 class="admin-title">Admin</h2>
+
+<form id="gameCreationForm">
+    <div class="form-group">
+        <label for="players">Select Players:</label>
+        <select id="players" name="players" multiple required style="width: 450px; height: 200px;">
+            <!-- Dynamically populated with EJS -->
+            <% userList.forEach(function(user){ %>
+                <option value="<%= user %>"><%= user %></option>
+            <% }); %>
+        </select>
+    </div>
+    
+    <!-- Container for displaying selected usernames -->
+    <div id="selectedPlayers" class="selected-players">
+        <h3>Selected Players:</h3>
+        <ul id="selectedPlayersList"></ul>
+    </div>
+    
+    <div class="form-group">
+        <label for="gameName">Game Name:</label>
+        <input type="text" id="gameName" name="gameName" required>
+    </div>
+    <div class="form-group">
+        <label for="startingCash">Starting Cash Value:</label>
+        <input type="number" id="startingCash" name="startingCash" required>
+    </div>
+    <div class="form-group">
+        <label for="endDate">End Date:</label>
+        <input type="date" id="endDate" name="endDate" required>
+    </div>
+    <input type="submit" value="Create Game">
+</form>
+
+<script>
+    document.getElementById('players').addEventListener('dblclick', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (!selectedOption) return; // Exit if no option is selected
+
+        const selectedPlayersList = document.getElementById('selectedPlayersList');
+        
+        // Check if the username is already added to avoid duplicates
+        if (Array.from(selectedPlayersList.querySelectorAll('li')).some(li => li.textContent === selectedOption.value)) {
+            alert('This player has already been selected.');
+            return;
+        }
+
+        // Create a new list item for the selected username
+        const li = document.createElement('li');
+        li.textContent = selectedOption.value;
+        selectedPlayersList.appendChild(li);
+    });
+
+    document.getElementById('gameCreationForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Fetch from the selectedPlayersList, as players are added here on double-click
+        const selectedPlayers = Array.from(document.getElementById('selectedPlayersList').querySelectorAll('li')).map(li => li.textContent);
+
+        const formData = {
+            gameName: document.getElementById('gameName').value,
+            startingCash: document.getElementById('startingCash').value,
+            endDate: document.getElementById('endDate').value,
+            players: selectedPlayers // Now uses the usernames from the selectedPlayersList
+        };
+
+        const response = await fetch('/admin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const responseBody = await response.text();
+        console.log(responseBody); // Optionally, log the server's response
+
+        // Display feedback to the admin
+        let messageBox = document.getElementById('feedbackMessage');
+        if (!messageBox) {
+            messageBox = document.createElement('div');
+            messageBox.id = 'feedbackMessage';
+            messageBox.style.marginTop = '10px';
+            messageBox.style.color = 'green'; // Style as needed
+            document.getElementById('gameCreationForm').after(messageBox);
+        }
+        messageBox.textContent = responseBody; // Update the message
+
+        // Clear the form fields
+        document.getElementById('gameName').value = '';
+        document.getElementById('startingCash').value = '';
+        document.getElementById('endDate').value = '';
+        document.getElementById('selectedPlayersList').innerHTML = ''; // Clear the selected players list
+    });
+
+</script>
+</body>
+</html>

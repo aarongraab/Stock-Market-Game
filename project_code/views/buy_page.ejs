@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Stocks</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+        }
+        .form-group button {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+        .total-cost {
+            margin-top: 20px;
+        }
+        .container .sell-button {
+            background-color: #e74c3c; /* A distinct red color */
+            color: black;
+            border: none; /* Removes default border */
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px; /* Optional: Adds rounded corners */
+        }
+
+        .container .sell-button:hover {
+            background-color: #c0392b; /* Darker shade of red for hover effect */
+        }
+
+        #suggestions {
+            list-style: none;
+            margin-top: 5px;
+            padding: 0;
+            border: 1px solid #ccc;
+            border-top: none; /* Remove the top border to connect it visually with the input field */
+        }
+        #suggestions li {
+            padding: 8px;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+        #suggestions li:hover {
+            background-color: #e9e9e9;
+        }
+</style>
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Cash Available: <span id="cashAvailable">$0.00</span></h2>
+        <form id="buyStockForm">
+            <div class="form-group">
+                <label for="stockTicker">Stock Ticker</label>
+                <input type="text" id="stockTicker" name="stockTicker" required>
+            </div>
+            <div class="form-group">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" name="quantity" min="1" required>
+            </div>
+            <div class="form-group">
+                <button type="button" id="checkPriceButton">Check Price</button>
+            </div>
+            <div class="total-cost">Total Cost: <span id="totalCost">$0.00</span></div>
+            <div class="form-group button-container">
+                <button type="button" id="buyButton">Buy Stonks</button>
+            </div>   
+            <div class="form-group button-container">
+                <button type="button" id="sellButton" class="sell-button">Sell Stonks</button>
+            </div>
+                     
+        </form>
+    </div>
+
+    <script>
+        let currentStockPrice = 100; // Placeholder stock price, to be updated with actual price from "Check Price"
+    
+        // Autocomplete functionality
+        const stockTickers = ["AAPL", "MSFT", "AMZN", "GOOGL", "BRK.B", "JNJ", "V", "PG", "JPM", "UNH", "MA", "INTC", "VZ", "HD", "T",
+                            "DIS", "MRK", "PFE", "KO", "BAC", "CSCO", "PEP", "WMT", "CVX", "MCD", "ABT", "NKE", "CRM", "XOM", "LLY",
+                            "ORCL", "DHR", "CMCSA", "COST", "ACN", "ABBV", "TMO", "MDT", "AVGO", "TXN", "NEE", "BMY", "UNP", "LIN", "QCOM",
+                            "UPS", "LOW", "HON", "AMGN", "IBM", "C", "BA", "SCHW", "GE", "MMM", "RTX", "SBUX", "CAT", "GS", "BLK",
+                            "CVS", "NOW", "TGT", "DE", "MS", "MU", "GILD", "INTU", "LMT", "SYK", "F", "MDLZ", "MO", "COP", "BKNG",
+                            "ADBE", "SPGI", "AMAT", "ISRG", "TJX", "CI", "USB", "ZTS", "ADP", "CL", "PLD", "EL", "SO", "CCI", "GM",
+                            "DUK", "PGR", "BDX", "NSC", "VRTX", "ITW", "D", "EQIX", "AIG", "ALL", "AXP", "AFL", "APD", "ARE", "ADM",
+                            "LNT", "AEE", "AEP", "AWK", "AMP", "ABC", "AME", "APH", "ADI", "ANSS", "AON", "APA", "AIV", "AAP", "AES",
+                            "AET", "AMG", "A", "APTV", "ANET", "AJG", "AIZ", "ATO", "ADSK", "AZO", "AVB", "AVY", "BKR", "BLL", "BXP",
+                            "BSX", "AVGO", "BR", "BF.B", "CHRW", "COG", "CDNS", "CPB", "COF", "CAH", "KMX", "CCL", "CARR", "CTLT", "CAT",
+                            "CBOE", "CBRE", "CDW", "CE", "CNC", "CNP", "CERN", "CF", "CHTR", "CLX", "CME", "CMS", "CTSH", "CL", "CMCSA",
+                            "CMA", "CAG", "CXO", "COP", "ED", "STZ", "COO", "CPRT", "GLW", "CTVA", "COST", "CCI", "CSX", "CMI", "CVS",
+                            "DHI", "DHR", "DRI", "DVA", "DE", "DAL", "XRAY", "DVN", "DXCM", "FANG", "DLR", "DFS", "DISCA", "DISCK", "DISH"];
+        const stockTickerInput = document.getElementById('stockTicker');
+        
+        stockTickerInput.addEventListener('input', function() {
+            const inputVal = this.value.toUpperCase();
+            const matches = stockTickers.filter(ticker => ticker.startsWith(inputVal));
+            clearSuggestions();
+    
+            if (inputVal.length > 0) {
+                const suggestionsList = document.createElement('ul');
+                suggestionsList.id = 'suggestions';
+                document.querySelector('.form-group').appendChild(suggestionsList);
+    
+                matches.forEach(match => {
+                    const suggestionItem = document.createElement('li');
+                    suggestionItem.textContent = match;
+                    suggestionsList.appendChild(suggestionItem);
+    
+                    suggestionItem.addEventListener('click', function() {
+                        stockTickerInput.value = this.textContent;
+                        clearSuggestions();
+                    });
+                });
+            }
+        });
+    
+        function clearSuggestions() {
+            const existingSuggestions = document.getElementById('suggestions');
+            if (existingSuggestions) {
+                existingSuggestions.remove();
+            }
+        }
+    
+        // Fetch stock price and update currentStockPrice
+        document.getElementById('checkPriceButton').addEventListener('click', async function() {
+            const stockTicker = stockTickerInput.value;
+            
+            if (stockTicker) {
+                try {
+                    const response = await fetch(`/api/check-price?ticker=${stockTicker}`);
+                    const data = await response.json();
+    
+                    if (data.price) {
+                        currentStockPrice = data.price; // Update the current stock price with the fetched price
+                        calculateTotalCost(); // Recalculate total cost with the new stock price
+                    } else {
+                        alert('Failed to retrieve price. Please try again. API only handles 5 API calls per minute');
+                    }
+                } catch (error) {
+                    console.error('Error fetching stock price:', error);
+                    alert('An error occurred while fetching the stock price.');
+                }
+            } else {
+                alert('Please enter a stock ticker.');
+            }
+        });
+    
+        // Calculate total cost based on currentStockPrice and input quantity
+        document.getElementById('quantity').addEventListener('input', calculateTotalCost);
+
+        document.getElementById('sellButton').addEventListener('click', function() {
+            const username = '<%= username %>'; // Use the username passed to the EJS template
+            window.location.href = `/sell/${encodeURIComponent(username)}`;
+        });
+
+        function calculateTotalCost() {
+            const quantity = document.getElementById('quantity').value;
+            const totalCost = currentStockPrice * quantity;
+            document.getElementById('totalCost').innerText = `$${totalCost.toFixed(2)}`;
+        }
+    </script>
+    
+</body>
+</html>
