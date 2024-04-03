@@ -7,10 +7,10 @@ import session from 'express-session';
 import fetch from 'node-fetch';
 import { format } from 'date-fns';
 import request from 'supertest';
-import app from './app.mjs';
+import app from '../app.mjs';
 
-import * as database from './database.mjs';
-import * as api from './api.mjs';
+import * as db from '../database/index.mjs';
+import * as api from '../api.mjs';
 jest.mock('./api.mjs'); 
 
 const port = 8820;
@@ -33,7 +33,7 @@ app.use(session({
 // Connect to MongoDB
 async function start() {
     try {
-        await database.connectToMongo();
+        await db.connectToMongo();
         app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
     } catch (error) {
         console.error('Failed to connect to MongoDB:', error);
@@ -48,13 +48,13 @@ const testPassword = 'password';
 
 // Insert a user into the database before running any tests
 beforeAll(async () => {
-    await database.insertUser(testUsername, testPassword);
+    await db.insertUser(testUsername, testPassword);
 });
 
 describe('POST /login', function() {
     beforeAll(async () => {
         // Insert a user for testing login functionality
-        await database.insertUser('testUser', 'testPassword');
+        await db.insertUser('testUser', 'testPassword');
     });
 
     // Successful login attempt
