@@ -74,10 +74,10 @@
                 <input type="password" id="confirmPassword" required>
             </div>
             <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
             <div class="form-group">
                 <button type="button" id="registerButton">Register</button>
             </div>
-            <div id="successMessage" class="success-message"></div>
             <div class="form-group">
                 <button type="button" id="backToLoginButton">Back to Login</button>
             </div>            
@@ -127,24 +127,6 @@
                     errorMessage.style.display = 'block';
                     return;
                 }
-    
-                // Username is available, proceed with the registration
-                // We manually send a POST request to the registration endpoint
-                /*
-                const matchResponse = await fetch('/checkMatch', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                const { match } = await matchResponse.json();
-                if (!match) {
-                    errorMessage.textContent = 'Incorrect Username or Password';
-                    errorMessage.style.display = 'block';
-                    return;
-                }
-                */
 
                 const register = await fetch('/insert', {
                     method: 'POST',

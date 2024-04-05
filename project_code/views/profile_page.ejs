@@ -100,8 +100,8 @@
         </div>
         <div class="details">
             <h3>Account Details</h3>
-            <p id="cashValue">Overall Cash Value: $<%= cashValue %></p>
-            <p id="profits">Profits: $<%= profits %></p>            
+            <p id="cashValue">Overall Cash Value: $<%= parseFloat(cashValue).toFixed(2) %></p>
+            <p id="profits">Profits: $<%= parseFloat(profits).toFixed(2) %></p>            
         </div>
         <div class="activity">
             <h3>Recent Activity</h3>

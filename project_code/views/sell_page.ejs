@@ -6,63 +6,53 @@
     <title>Sell Stocks</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #ecf0f1;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            color: #333; /* Dark grey text for general readability */
         }
         .container {
+            width: 100%;
             max-width: 600px;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            margin: auto;
         }
-        h1 {
-            color: #2c3e50; /* Dark blue for headings */
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .error-message {
-            color: #e74c3c; /* Red for errors */
-            background-color: #fce4e4; /* Light red background */
-            border: 1px solid #e74c3c;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 20px;
-            display: none; /* Hidden by default */
-        }
-        .stocks-display, .total-sale, .form-group {
-            margin-bottom: 20px;
-        }
-        ul#stocksList li {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            /* Rest of the styles */
+        .form-group {
+            margin-bottom: 15px;
         }
         .form-group label {
-            color: #7f8c8d; /* Light grey for form labels */
-            /* Rest of the styles */
+            display: block;
+            margin-bottom: 5px;
         }
-        .form-group input, .form-group select {
-            border: 1px solid #bdc3c7; /* Light grey border for inputs */
-            /* Rest of the styles */
+        .form-group select, .form-group input, .form-group button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
         }
         .form-group button {
-            background-color: #3498db; /* Blue for buttons */
-            /* Rest of the styles */
+            background-color: #3498db; /* Blue for consistency with Buy page, modify as needed */
+            color: white;
+            cursor: pointer;
         }
         .form-group button:hover {
             background-color: #2980b9; /* Darker blue on hover */
         }
+        .profit-display {
+            margin-top: 20px; /* Consistent spacing */
+        }
         .total-sale {
-            background-color: #f7f7f7; /* Light background for total sale display */
-            border: 1px solid #ddd;
+            margin-top: 20px;
+        }
+        .error-message, .success-message {
+            margin-bottom: 15px;
+            display: none; /* Hide by default, shown via JavaScript */
             padding: 10px;
-            border-radius: 4px;
-            /* Rest of the styles */
+            border-radius: 5px;
+        }
+        .error-message {
+            color: #e74c3c; /* Red */
+            background-color: #fce4e4; /* Light red background */
+        }
+        .success-message {
+            color: green;
         }
     </style>
 </head>
@@ -70,44 +60,140 @@
     <div class="container">
         <h1>Sell Stocks</h1>
 
-        <div id="errorMessage" class="error-message">Error message goes here.</div>
-
-        <!-- Display Stocks Available for Sale -->
-        <div class="stocks-display">
-            <h2>Stocks Available:</h2>
-            <ul id="stocksList">
-                <!-- Dynamic list of stocks the user owns will be inserted here -->
-            </ul>
-        </div>
-
-        <!-- Dropdown for Selecting Stock to Sell -->
         <div class="form-group">
             <label for="stockToSell">Select Stock:</label>
             <select id="stockToSell" name="stockToSell">
-                <!-- Options populated based on stocks owned by the user -->
+                <!-- Options will be populated dynamically -->
             </select>
         </div>
 
-        <!-- Input Field for Quantity to Sell -->
         <div class="form-group">
             <label for="quantityToSell">Quantity to Sell:</label>
             <input type="number" id="quantityToSell" name="quantityToSell" min="1" required>
         </div>
 
-        <!-- Display Calculated Total -->
-        <div class="total-sale">Total Sale: <span id="totalSale">$0.00</span></div>
+        <div class="total-cost">Total Sale: <span id="totalCost">$0.00</span></div>
 
-        <!-- Button for Calculating Stock Sale Price -->
         <div class="form-group">
-            <button type="button" id="calculateSale">Calculate Sale</button>
+            <button type="button" id="checkPriceButton">Calculate Sale</button>
         </div>
 
-        <!-- Button for Selling Stocks -->
         <div class="form-group">
-            <button type="button" id="sellStocksButton">Sell Stonks</button>
+            <button type="button" id="sellStock">Sell Stocks</button>
         </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        
     </div>
 
-    <script src="/path/to/your/sellPageScript.js"></script> <!-- Adjust the path as needed -->
-</body>
-</html>
+    <script>
+        let currentStockPrice = 0;
+        const errorMessage = document.getElementById('errorMessage'); // Define error message element
+        const successMessage = document.getElementById('successMessage'); // Define success message element
+    
+        async function fetchAndDisplayOwnedStocks(username) {
+            try {
+                const response = await fetch(`/get-stocks-owned/${username}`);
+                if (!response.ok) throw new Error('Failed to fetch stocks owned');
+    
+                const stocksOwned = await response.json();
+                populateStockDropdown(stocksOwned);
+            } catch (error) {
+                console.error('Error fetching stocks owned:', error);
+                // Optionally update the UI to inform the user
+            }
+        }
+    
+        function populateStockDropdown(stocksOwned) {
+            const dropdown = document.getElementById('stockToSell');
+            dropdown.innerHTML = ''; // Clear existing options
+    
+            const defaultOption = document.createElement('option');
+            defaultOption.textContent = 'Select a stock';
+            defaultOption.value = '';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            dropdown.appendChild(defaultOption);
+    
+            // Cycle through owned stocks for the dropdown
+            stocksOwned.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.stockTicker;
+                option.textContent = `${stock.stockTicker} (${stock.quantity} Stocks Owned)`;
+                dropdown.appendChild(option);
+            });
+        } 
+    
+        document.getElementById('quantityToSell').addEventListener('input', calculateTotalCost);
+    
+        document.getElementById('checkPriceButton').addEventListener('click', async function() {
+            const stockTicker = document.getElementById('stockToSell').value;
+    
+            if (stockTicker) {
+                try {
+                    const response = await fetch(`/api/check-price?ticker=${stockTicker}`);
+                    const data = await response.json();
+    
+                    if (data.price) {
+                        currentStockPrice = data.price; // Update the current stock price with the fetched price
+                        calculateTotalCost(); // Recalculate total cost with the new stock price
+                    } else {
+                        alert('Failed to retrieve price. Please try again. API only handles 5 API calls per minute');
+                    }
+                } catch (error) {
+                    console.error('Error fetching stock price:', error);
+                    alert('An error occurred while fetching the stock price.');
+                }
+            } else {
+                alert('Please select a stock.');
+            }
+        });
+    
+        document.getElementById('sellStock').addEventListener('click', async function() {
+            const stockTicker = document.getElementById('stockToSell').value;
+            const quantityToSell = document.getElementById('quantityToSell').value;
+            const totalCostElement = document.getElementById('totalCost');
+            const totalCost = parseFloat(totalCostElement.innerText.replace('$', ''));
+            const username = '<%= username %>'; // Make sure this is correctly replaced by your server-side template
+    
+            try {
+                const response = await fetch('/sell-stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, stockTicker, quantityToSell, totalCost })
+                });
+    
+                const isSuccessful = await response.json();
+                if (!isSuccessful.success) {
+                    errorMessage.textContent = isSuccessful.message;
+                    errorMessage.style.display = 'block';
+                    successMessage.style.display = 'none';
+                } else {
+                    successMessage.textContent = isSuccessful.message;
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                }
+                document.getElementById('stockToSell').value = '';
+                document.getElementById('quantityToSell').value = '';
+                window.location.reload();
+            } catch (error) {
+                console.error('Error during transaction:', error);
+                errorMessage.textContent = 'An error occurred during the transaction.';
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            }
+        });
+    
+        function calculateTotalCost() {
+            const quantity = parseFloat(document.getElementById('quantityToSell').value);
+            const totalCost = currentStockPrice * quantity;
+            document.getElementById('totalCost').innerText = `$${totalCost.toFixed(2)}`;
+        }
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = '<%= username %>'; // Make sure this is correctly replaced by your server-side template
+            fetchAndDisplayOwnedStocks(username);
+        });
+    </script>
+    

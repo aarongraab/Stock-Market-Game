@@ -33,7 +33,6 @@ export function BuyPageRoutes(app) {
         res.json({ success: false, error: 'Trading is not possible right now. Please try during trading hours.' });
         return;
     }
-
     try {
         // Assuming stockPrice is defined and has the value you want to send back
         if (stockPrice == null) {
@@ -49,4 +48,43 @@ export function BuyPageRoutes(app) {
         return res.status(500).json({ success: false, error: 'Failed to process stock price' });
     }
     });
+
+    app.get('/get-cash/:username', async (req, res) => {
+        const username = req.params.username;
+        try {
+            const cashAvailable = await db.getCashValue(username);
+            res.status(200).json({ success: true, cashAvailable });
+        } catch (error) {
+            console.error(`Error fetching cash value for ${username}:`, error);
+            res.status(500).json({ success: false, message: "Failed to fetch cash value." });
+        }
+    });    
+
+    app.post('/buy-stock', async (req, res) => {
+        const { stockTicker, quantity, totalCost, username } = req.body;
+        const buy = 'BUY';
+    
+        try {
+            if (totalCost == 0) {
+                res.status(500).json({ success: false, message: "Please check price of stock before purchase." });
+                return;
+            }
+            const hasEnough = await db.checkBalance(username, totalCost);
+            if (!hasEnough) {
+                console.error(`Purchase failed for ${username}: Not enough cash to buy ${quantity} of ${stockTicker}`);
+                res.status(500).json({ success: false, message: "Not enough funds in cash account, aka you poor." });
+                return; 
+            }
+            await db.updatePlayerVariables(username, stockTicker, quantity, totalCost);
+            await db.logTransaction(username, buy, stockTicker, quantity, totalCost);
+            console.log(`Stock ${stockTicker} purchased successfully`);
+            res.status(200).json({ success: true, message: "Purchase successful." });
+
+        } catch (error) {
+            console.error(`Purchase failed for ${username}: ${error}`);
+            res.status(500).json({ error: "An error occurred during the purchase process." });
+        }
+    });
+    
+
 }

@@ -66,12 +66,24 @@
         #suggestions li:hover {
             background-color: #e9e9e9;
         }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .success-message {
+            color: green;
+            margin-bottom: 15px;
+            display: none; 
+        }
 </style>
 
     </style>
 </head>
 <body>
     <div class="container">
+        <div id="message" style="display: none; margin-bottom: 20px; padding: 10px; border-radius: 5px;"></div>
+
         <h2>Cash Available: <span id="cashAvailable">$0.00</span></h2>
         <form id="buyStockForm">
             <div class="form-group">
@@ -82,24 +94,27 @@
                 <label for="quantity">Quantity</label>
                 <input type="number" id="quantity" name="quantity" min="1" required>
             </div>
+            <div class="total-cost">Total Cost: <span id="totalCost">$0.00</span></div>
             <div class="form-group">
                 <button type="button" id="checkPriceButton">Check Price</button>
             </div>
-            <div class="total-cost">Total Cost: <span id="totalCost">$0.00</span></div>
             <div class="form-group button-container">
-                <button type="button" id="buyButton">Buy Stonks</button>
+                <button type="button" id="buyStock">Buy Stonks</button>
             </div>   
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
             <div class="form-group button-container">
                 <button type="button" id="sellButton" class="sell-button">Sell Stonks</button>
             </div>
-                     
         </form>
-    </div>
+    </div>    
 
     <script>
-        let currentStockPrice = 100; // Placeholder stock price, to be updated with actual price from "Check Price"
-    
-        // Autocomplete functionality
+        const pathSegments = window.location.pathname.split('/');
+        const username = pathSegments[pathSegments.length - 1]; 
+
+        let currentStockPrice = 0; 
+
         const stockTickers = ["AAPL", "MSFT", "AMZN", "GOOGL", "BRK.B", "JNJ", "V", "PG", "JPM", "UNH", "MA", "INTC", "VZ", "HD", "T",
                             "DIS", "MRK", "PFE", "KO", "BAC", "CSCO", "PEP", "WMT", "CVX", "MCD", "ABT", "NKE", "CRM", "XOM", "LLY",
                             "ORCL", "DHR", "CMCSA", "COST", "ACN", "ABBV", "TMO", "MDT", "AVGO", "TXN", "NEE", "BMY", "UNP", "LIN", "QCOM",
@@ -144,7 +159,10 @@
                 existingSuggestions.remove();
             }
         }
-    
+        
+        // Calculate total cost based on currentStockPrice and input quantity
+        document.getElementById('quantity').addEventListener('input', calculateTotalCost);
+
         // Fetch stock price and update currentStockPrice
         document.getElementById('checkPriceButton').addEventListener('click', async function() {
             const stockTicker = stockTickerInput.value;
@@ -168,9 +186,46 @@
                 alert('Please enter a stock ticker.');
             }
         });
-    
-        // Calculate total cost based on currentStockPrice and input quantity
-        document.getElementById('quantity').addEventListener('input', calculateTotalCost);
+        
+        // Handle "Buy Stock" button click
+        document.getElementById('buyStock').addEventListener('click', async function() {
+            const stockTicker = document.getElementById('stockTicker').value;
+            const quantity = document.getElementById('quantity').value;
+
+            calculateTotalCost(); 
+            const totalCostElement = document.getElementById('totalCost');
+            const totalCost = parseFloat(totalCostElement.innerText.replace('$', ''));
+
+            try {
+                const response = await fetch('/buy-stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, stockTicker, quantity, totalCost })
+                });
+
+                const isSuccessful = await response.json();
+                if (!isSuccessful.success) {
+                    errorMessage.textContent = isSuccessful.message;
+                    errorMessage.style.display = 'block';
+                    successMessage.style.display = 'none'; // Hide success message in case of error
+                } else {
+                    // Clear the input fields after successful registration
+                    successMessage.textContent = isSuccessful.message;
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none'; // Hide error message in case of success
+                }
+                document.getElementById('stockTicker').value = '';
+                document.getElementById('quantity').value = '';
+                //window.location.reload();
+                updateCashAvailable();
+
+            } catch (error) {
+                console.error('Error during registration:', error);
+                errorMessage.textContent = 'An error occurred during registration.';
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none'; // Hide success message in case of error
+            }
+        });
 
         document.getElementById('sellButton').addEventListener('click', function() {
             const username = '<%= username %>'; // Use the username passed to the EJS template
@@ -182,6 +237,28 @@
             const totalCost = currentStockPrice * quantity;
             document.getElementById('totalCost').innerText = `$${totalCost.toFixed(2)}`;
         }
+
+        async function updateCashAvailable() {
+        try {
+            const response = await fetch(`/get-cash/${username}`);
+            const data = await response.json();
+
+            if (data.success && data.cashAvailable) {
+                document.getElementById('cashAvailable').innerText = `$${parseFloat(data.cashAvailable).toFixed(2)}`;
+            } else {
+                console.error('Failed to update cash available:', data.message);
+                // Handle the error appropriately, maybe set cash available to "$0.00" or display an error
+                document.getElementById('cashAvailable').innerText = '$0.00';
+            }
+        } catch (error) {
+            console.error('Error fetching cash available:', error);
+            document.getElementById('cashAvailable').innerText = '$0.00'; // Default or error value
+        }
+    }
+
+    // Call updateCashAvailable when the page loads
+    document.addEventListener('DOMContentLoaded', updateCashAvailable);
+
     </script>
     
 </body>
