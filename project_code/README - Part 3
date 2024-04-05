@@ -1,0 +1,215 @@
+README FILE: Project - Part 3
+
+Importing modules:
+- I have created a package.json file which holds a list of the imports I've done. I have also listed them below.
+- The polygon can only be successful if the polygon client-js folder is also located in the same directory it is being run in the terminal.
+
+NPM IMPORTS:
+1. npm install express-session
+2. npm install node-fetch
+3. npm install --save @polygon.io/client-js
+4. npm install date-fns
+5. npm install supertest --save-dev
+6. npm install --save-dev jest
+7. There may be more that I forgot to document at the beginning of the project...
+
+Layout of files:
+- All of my files for this project are found in my project_code folder.
+- app.mjs: My server file.
+- api.mjs: My API calls.
+- /database: All my database code which is separated into respective files based on the collection they modify.
+- /views: All of my HTML/ejs files for each webpage are found here.
+- /routes: All of my route files specified to each webpage are found here.
+- /unit-tests: Is where I have my unit tests stored under the file name tests.mjs.
+- In the /unit-tests folder I also have a resetDB.mjs which I specifically use to clear the db and reinitialize it with specific usernames and passwords, admin access, and stock purchases.
+- The API files are found in the client-js-master folder. This should be in the same directory as your terminal when you run the save command.
+- Thinking.mjs are just my thoughts and quick notes, don't need to mark that.
+
+Running the server:
+- Ensure you are in the proper directory - specifically the project_code one.
+- Ensure all the proper files and modules are installed correctly.
+- The server can be run in the terminal with the command "node app.mjs".
+- This should launch the http://localhost:8820 website.
+- This should bring you to the login page. 
+- Please go to the Login Page header for more information.
+
+The database:
+- All database files can be located in the database folder.
+- Inside the folder, there are 8 files.
+- 5 of the files correspond to the respective collection in the db and strictly only deal with calls that affect that collection - users.mjs, transactions.mjs, playerVariables.mjs, games.mjs, and gamesPlayers.mjs.
+- connections.mjs deals with setting up the DB and connecting to MongoDB.
+- test.mjs is specifically used for the resetDB.mjs file to delete everything within the database.
+- index.mjs is used to deal with the high number of import statements.
+
+- I mainly used MongoDB Compass in order to visualize the data being inserted into the database.
+- I have 5 collections within my 'stockGame' database.
+- 'Users' which is strictly for documenting usernames and passwords. I also have a variable called 'inGame' which is set to false for anyone registering and is changed to true when admin adds them to a game.
+- 'Games' which is strictly for documenting newly created games. Includes a unique gameId, the gameName, startingCash, and the endDate.
+- 'GamePlayers' which strictly is for documenting which players are a part of which games. Per entry, includes the unique gameId and username. 1 game may have 5 players, which means 5 separate entries each all with the same gameId (since they are all apart of the same game)
+- 'PlayerVariables' which strictly is used to document information about each username, cash amount, profits, transactions (which initializes to empty), and an array of transactions (which initializes to empty).
+
+My API: 
+***MY API CAN ONLY HANDLE 5 API REQUESTS PER MINUTE***
+***ANY ERRORS MAY BE DUE TO NOT ENOUGH API REQUESTS*** (Please wait a minute and try again)
+***SOMETIMES THE API WONT LET YOU MAKE CALLS AT CERTAIN TIMES***(These errors will be displayed in the console to see if its issues with my code or the API call)
+***MY API ONLY RETURNS END OF DAY STOCK PRICES*** (For real time stock prices, I needed to pay)
+- All api functions are found in my api.mjs file.
+- How my API call works is that I only get stock prices from the day prior to the request being made.
+- This causes issues if trades are attempted on Monday... but you can trade on Saturdays! (Again would be fixed if I got real-time stock prices from paid version)
+- Whenever the 'Check Price' button on the 'buy_page.ejs' is pressed, I do 1 API call which returns the closing stock price of the previous day.
+- Whenever the 'Buy Stonks' button on the 'buy_page.ejs' is pressed, another API request is used to calculate the stock purchase made. 
+- API requests are made with a special key, linking my account.
+- The 'getStockPrice' method takes a string ticker variable and a date variable to do the specific API call. (Date must be in format "YYYY-MM-DD").
+
+Login Page:
+- The login page HTML file is login_page.ejs found in the views folder.
+- The login page routes file can be found in the routes folder called login_page_routes.mjs.
+- Page consists of a 'username' field, a 'password' field, a 'Log In' button, and a hyperlink to the register page.
+1. New username, password doesn't matter = Red error text below 'Log In' button saying "Username doesn't exist. Please register an account". Message printed to console.
+2. Existing username, incorrect password = Red error text below 'Log In' button saying "Invalid credentials". Message printed to console.
+3. Username and password correct = "Login successful" message to console. User is redirected to the profile_page.ejs.
+- Usernames and passwords checks are called using the routes method in app.mjs which calls the specific database method.
+- Dynamic URLs are used, the username will appear in the URL for easier access later on. 
+- Entering 'admin' as the username and password will redirect you to the admin page.
+
+Register Page:
+- The registration page HTML file is register_page.ejs found in the views folder.
+- The register page routes can be found in app.mjs.
+- The registration page routes file can be found in the routes folder called registration_page_routes.mjs.
+- Page consists of a 'username' field, a 'password' field, a 'confirm password' field, a 'Register' button, and a 'Back to Login' button.
+1. New username, password legth < 5 characters = Red error text above 'Register' button saying "Password is too short".
+2. New username, password and confirm password dont match = Red error text above 'Register' button saying "Passwords do not match".
+3. Existing username entered, password and confirm password match and are longer than 5 characters = Red error text above 'Register' button saying "Username already exists". Message printed to console.
+4. New username, password length > 5, password and confirm password match = Green text below 'Register' button saying "Registration successful". All fields are erased. Message printed to console showing username and password.
+- If registration successful, username and password saved in database under collection 'Users'.
+- 'Back to Login' button returns the user back to the login page once they've finished registering their new account.
+
+Admin Page:
+- Entering 'admin' as the username and 'admin' as the password will redirect you to the admin page.
+- The admin page HTML file is admin_page.ejs found in the views folder.
+- The admin page routes can be found in the routes folder called admin_page_routes.mjs.
+- Page consists of a 'Select Players' scroll box. Includes all usernames that the admin can manually double click to add to the 'Selected Players' array.
+- Only players with the 'inGame' set to false will appear in the 'Select Players' scroll box.
+- Once a game is created successfully and the page resets, the 'Select Players' box will update to remove the old players recently added to a new game.
+- No way yet to remove a player once its been added to the 'Selected Players' array. Easiest way is to just refresh the page and start again.
+- Consists of 'Game Name' field, 'Starting Cash Value' field, a 'End of Date' field, and a 'Create Game' button.
+- When 'Create Game' button is pressed, all data is entered into the database 'stockGame' in the collections 'Games', 'GamePlayers', and 'PlayerVariables' as described in the database section of this readme file.
+- 'Back to Login' button which returns the user to the login page.
+- Admin login does not use dynamic routing to put username in URL.
+- Admin's account doesn't appear in the 'Select Players' scroll box as when the db is initialized its 'inGame' variable is set to 'true'.
+
+Profile Page:
+- The profile page HTML file is profile_page.ejs found in the views folder.
+- The profile page routes can be found in the routes folder called profile_page_routes.mjs.
+- This is just a quick mock of what I am hoping the profile page will be.
+- Dynamic routing is used to pull the username from the URL and pull specific data regarding their profile onto the page.
+- Data included is the user's 'Overall Cash Value' and their 'Profits'.
+- 'Buy/Sell' button will take the user to the buy page.
+- The 'Log Out' button will return the user to the login page.
+
+Buy Page:
+- The buy page HTML file is buy_page.ejs found in the views folder.
+- The buy page routes can be found in the routes folder called buy_page_routes.mjs.
+- A 'Cash Available' text box that will display the players available cash based on the dynamic routing of the username.
+- A 'Stock Ticker' field where players can search for a stock on the NYSE from the drop down menu of the top 500 most popular tickers. If stock isn't popular and widely known, they can still enter the ticker and the API call will still work.
+- A 'Quantity' field which a player can enter the specific amount of stocks they wish to purchase.
+- Whenever the 'Check Price' button is pressed, I do 1 API call which returns the closing stock price of the previous day. This price is then multiplied by the entered 'Quantity' value to print a total cost value.
+- New check price value updates the 'Total Cost' field.
+- Whenever the 'Buy Stonks' button is pressed, another API request is sent which takes the stock price and multiplies it by the 'Quantity' value and buys that much stock. Profile and transactions are then updated. 
+- The logTransaction method is called to log the buy transaction into the 'Transactions' collection.
+- Error messages appear above the buttons in red text when a unsuccessful request is returned.
+- Success messages appear above the buttons in green text when a successul request is returned.
+- The 'Buy Stonks' button cannot be pressed until the 'Check Price' button has been pressed so the total cost can be calculated when purchasing the stock.
+- The 'Sell Stonks' page takes the user to the sell page.
+
+Sell Page:
+- The sell page HTML file is sell_page.ejs found in the views folder.
+- The sell page routes can be found in the routes folder called sell_page_routes.mjs.
+- The 'Select Stock' drop down will list all the stocks that player owns and can select the one they desire to sell. List will also include quantity of stocks.
+- The 'Quantity to Sell' field is so the user can dictate how many stocks they will to sell.
+- The 'Calculate Sale' button will preform another API call, similar to that of 'Check Price', to calculate how much profit the player will make. Profit will be updated in the 'Total Sale' amount.
+- The 'Sell Stonk' button will:
+-- Call the combinestock method to combine any duplicate stocks as a stock purchase enters the newly aquired stock at the end of the array.
+-- Call the reduceQuantity method which takes the 'quantityToSell' variable and subtracts it from the total amount of stocks owned.
+-- Calls the removeZeroQuantityStocks method which eliminates any stocks with a quantity of 0 from the stocksOwned array.
+-- Calls the updateProfits method which updates the profit amount for the given user based on the sale of the stock.
+-- Calls the logTransaction method which updates the 'Transactions' collection.
+-- Updates the website for the dropdown menu to refresh and clears the fields so a new sale can be made.
+- Success and error messages should appear below the 'Sell Stocks' button in red and green texts.
+- If database was initialized through the resetDB.mjs file, and the user is logged in as aaron (username: aaron & password: aaron), the drop down menu should include 3 owned stocks with their quantities.
+
+Logout Page:
+- The logout page HTML file is logout_page.ejs found in the views folder.
+- The logout page routes can be found in the routes folder called logout_page_routes.mjs.
+- This is accessed by the 'Logout' button found on the profile page.
+- The logout page displays a 'Log Out Successful' message.
+- Provides a 'Back to Login' button which returns the user back to the login page.
+
+--------------------------------
+
+Features to add/ fix for future:
+Profile Page:
+- A leaderboard which displayed other competing plaer's scores and their rankings.
+- A Recent Activity Board which would display the user's recent buys/ sells of stocks.
+- Activate the 'Friends' button to bring up a list of friend's profiles the user can visit to see their friend's recent stock activities.
+- A list of popular stocks within a pannel at the bottom of the screen (Might need a better API subscription for this one).
+- An 'End Date' display with a timer as to how long you have left in your game.
+- Want to add a 'Logout' button at the top of each webpage.
+- Want to add a 'Back' button at each webpage to return to the previous site.
+- Want to add a 'Return to Profile' button on the Buy and Sell pages.
+- Fix duplications within stocksOwned database.
+- Look into more reliable API calls.
+- (Completed) Fix update db when stocks are bought.
+- (Completed) Fix update db when stocks are sold.
+- (Completed) Fix drop down menu on sell page of stock lists for player.
+- (Completed) Set up API calls for checking and selling stocks on sell page.
+- Set up timer that checks daily when game is done.
+- Set up ranking system for comparing profits against players in a game.
+- (Completed) Make the sell page better.
+- (Completed) Update unit test code to include better initialization of db and cleaning of db.
+- Update unit test code so it works properly.
+- (Working) Update profile page so it displays more information.
+- Set up profile and friends button on profile page that redirect to new websites where you can view friend's profiles.
+- (Completed) Separate server and routes code into modularized files.
+- (Completed) Set up better architecture for code files.
+
+Buy Page Fixes:
+- BUG: If a user checks the stock price of a cheap stock, then changes the stock Ticker to a more expensive stock, then presses the buy button, the user will buy the more expensive stock for the cheaper price.
+
+Sell Page Fixes:
+- BUG: Not displaying error and success messages below the buttons.
+- BUG: User is able to sell more stocks than they own.
+- BUG: User can calculate the sale of a stock and then switch to a cheaper stock they own to use that sale price instead.
+- BUG: User is able to press the 'Sell Stonks' button before calculating the sale price and selling the stock for a profit of $0.00.
+
+**Manually Testing**
+- Im sorry, I'm trying to write a test code but if it doesn't work, please attempt to test manually.
+- Running the resetDB.mjs file in the unit-tests folder will clear, initialize, add players, create two new games, and buys stocks for username: aaron.
+
+Test #1: Registration Page
+1. Username: Bobby, Password: 123, Confirm Password: 123 - "Password is too short" error
+2. Username: Bobby, Password: 12345, Confirm Password: 11111 - "Passwords do not match" error
+3. Username: Bobby, Password: 12345, Confirm Password: 12345 - "Registration Successful" successful
+4. Username: Bobby, Password: 11111, Confirm Password: 11111 - "Username already exists" error
+5. Username: admin, password: admin, Confirm Password: admin - "Registration Successful" successful
+6. Username: Julia, Password: hello, Confirm Password: hello - "Registration Successful" successful
+
+Test #2: Login Page
+1. Username: Bobby, Password: 00000 - "Invalid credentials" error
+2. Username: Andrew, Password: hello - "Username doesn't exist. Please register an account" error
+3. Username: Bobby, Password: 12345 - Login successful redirected to profile page.
+4. Username: admin, Password: admin - Login successful redirected to admin page.
+
+Test #3: Admin Page
+1. Select Players: Bobby and Julia. Game Name: Test, Starting Cash Value: 1000, End Date: 2024-03-21 - Game Created Successfully (Database will reflect these additions)
+
+Test #4: API Calls - Buy Page
+1. Stock Ticker: AAPL, Quantity: 10 - Successful Total Cost Updated
+
+Test #5: API Calls - Sell Page
+1. While still logged in to a user that owns a stock:
+- Pick the stock from the drop down menu.
+- Select the total amount of stock that user owns and add that amount to the 'Quantity To Sell' field.
+- Calculate the Sale Amount using the 'Calculate Sale' button.
+- Sell the stock using the 'Sell Stonk' button.
+- Refer to the console.log to see the process.
